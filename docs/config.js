@@ -1,4 +1,4 @@
 window.ULSAN_CONFIG = {
-  kakaoKey: "d1d4058683fe82b8602c2d841cfaa769",
+  kakaoKey: "9a05431ce97e94bca8bed4cd0a648db0",
   apiBase: ""
 };
