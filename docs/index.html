@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f6ef">
+  <meta name="description" content="울산의 도로명 네 곳에서 만나는 인물과 사건. 지도에서 길을 고르고 역사에 대해 질문해 보세요.">
+  <title>길에 새긴 울산 · 울산 역사 지도</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js" defer></script>
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <header class="masthead wrap">
+    <a href="./" class="brand"><span aria-hidden="true">⌖</span> 길에 새긴 울산</a>
+    <span class="edition">울산 역사 지도 <b>VOL. 01</b></span>
+  </header>
+  <main class="wrap">
+    <section class="hero" aria-labelledby="title">
+      <div class="kicker"><span></span> 울산광역시 · 도로명으로 읽는 역사</div>
+      <h1 id="title">울산의 길에는<br><em>사람의 이름</em>이 남아 있습니다.</h1>
+      <p>늘 지나던 길이 왜 그런 이름을 갖게 됐을까요? 지도에서 길 하나를 고르고, 그 이름에 담긴 이야기를 만나 보세요.</p>
+    </section>
+    <nav id="roads" aria-label="도로 선택"></nav>
+    <div class="layout">
+      <section class="map-panel" aria-labelledby="map-title">
+        <header class="panel-head"><h2 id="map-title">울산 지도</h2><span id="map-mode">개략 지도</span></header>
+        <div class="map-frame">
+          <div id="schematic" aria-label="네 도로의 개략 위치"></div>
+          <div id="kakao" aria-label="카카오 지도" hidden></div>
+          <button id="reset" type="button" hidden>전체 보기</button>
+        </div>
+        <p id="map-note" class="map-note" role="status">색이 있는 마커를 눌러 이야기를 열 수 있습니다. 선은 위치를 설명하는 개략 선형입니다.</p>
+      </section>
+      <article id="story" class="story" aria-labelledby="road-name">
+        <div class="story-top"><span id="chapter"></span><span id="theme"></span></div>
+        <h2 id="road-name"></h2>
+        <p id="person"></p>
+        <h3 id="headline"></h3>
+        <h4>도로명에 담긴 뜻</h4><p id="origin"></p>
+        <h4>함께 보는 역사</h4><p id="event"></p>
+        <details><summary>참고 자료</summary><ul id="sources"></ul></details>
+        <section class="ask" aria-labelledby="ask-title">
+          <h3 id="ask-title"><span aria-hidden="true">✦</span> AI 역사 해설</h3>
+          <button id="suggestion" type="button"></button>
+          <form id="ask-form">
+            <label class="sr-only" for="question">역사 질문</label>
+            <div class="input-row"><input id="question" name="question" maxlength="300" placeholder="이 길의 역사에 대해 질문해 보세요" required><button id="send" type="submit">질문하기</button></div>
+          </form>
+          <p id="answer" role="status" aria-live="polite"></p>
+          <small>답변은 생성형 AI가 작성합니다. 역사 자료는 위의 참고 자료에서 확인할 수 있습니다.</small>
+        </section>
+      </article>
+    </div>
+  </main>
+  <footer class="wrap">길에 새긴 울산 <span>·</span> 대학 과제용 시민 역사 안내</footer>
+</body>
+</html>
