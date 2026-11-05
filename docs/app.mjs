@@ -3,7 +3,14 @@ import { roads } from "./roads.mjs";
 const byId = (id) => document.getElementById(id);
 const config = window.ULSAN_CONFIG ?? {};
 const apiBase = (config.apiBase ?? "").trim().replace(/\/+$/, "");
-const mapNote = "색이 있는 마커를 눌러 이야기를 열 수 있습니다. 선은 위치를 설명하는 개략 선형입니다.";
+const mapNote = "도로선은 OpenStreetMap 데이터를 사용합니다. 박상진로는 선형을 확인할 때까지 박상진 의사 생가 마커로 안내합니다.";
+
+function showMapNote(prefix = "") {
+  const attribution = document.createElement("a");
+  attribution.href = "https://www.openstreetmap.org/copyright";
+  attribution.textContent = "© OpenStreetMap contributors";
+  byId("map-note").replaceChildren(prefix + mapNote + " ", attribution);
+}
 const selections = [];
 const lines = new Map();
 const requests = new Map();
@@ -82,8 +89,7 @@ function renderRoadTabs() {
   });
 }
 
-const centerPoint = (road) => road.path[Math.floor((road.path.length - 1) / 2)];
-const project = ([lat, lng]) => [(lng - 129.225) / .208 * 100, (35.674 - lat) / .184 * 100];
+const project = ([lat, lng]) => [(lng - 129.17) / .265 * 100, (35.68 - lat) / .275 * 100];
 
 function renderSchematic() {
   const target = byId("schematic");
@@ -93,20 +99,22 @@ function renderSchematic() {
   svg.setAttribute("aria-hidden", "true");
   svg.innerHTML = '<defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M5 0H0V5" fill="none" stroke="#c9d5c4" stroke-width=".25"/></pattern></defs><rect width="100" height="100" fill="#e8eddf"/><rect width="100" height="100" fill="url(#grid)"/>';
   for (const road of roads) {
-    const line = document.createElementNS(svg.namespaceURI, "polyline");
-    line.setAttribute("points", road.path.map(project).map((point) => point.join(",")).join(" "));
-    line.setAttribute("fill", "none");
-    line.setAttribute("stroke", road.color);
-    line.setAttribute("stroke-width", "5");
-    line.setAttribute("stroke-linecap", "round");
-    line.setAttribute("stroke-linejoin", "round");
-    line.setAttribute("vector-effect", "non-scaling-stroke");
-    svg.append(line);
+    for (const path of road.paths) {
+      const line = document.createElementNS(svg.namespaceURI, "polyline");
+      line.setAttribute("points", path.map(project).map((point) => point.join(",")).join(" "));
+      line.setAttribute("fill", "none");
+      line.setAttribute("stroke", road.color);
+      line.setAttribute("stroke-width", "4");
+      line.setAttribute("stroke-linecap", "round");
+      line.setAttribute("stroke-linejoin", "round");
+      line.setAttribute("vector-effect", "non-scaling-stroke");
+      svg.append(line);
+    }
   }
   target.append(svg);
   for (const road of roads) {
-    const [x, y] = project(centerPoint(road));
-    const pin = roadButton(road, "pin map-marker", road.name);
+    const [x, y] = project(road.marker);
+    const pin = roadButton(road, "pin map-marker", road.markerLabel ?? road.name);
     pin.style.left = x + "%";
     pin.style.top = y + "%";
     target.append(pin);
@@ -122,7 +130,7 @@ function initKakao() {
     byId("schematic").hidden = false;
     byId("reset").hidden = true;
     byId("map-mode").textContent = "개략 지도";
-    byId("map-note").textContent = "카카오 지도를 불러오지 못했습니다. " + mapNote;
+    showMapNote("카카오 지도를 불러오지 못했습니다. ");
   };
   const timer = setTimeout(showFallback, 9000);
   script.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" + encodeURIComponent(key) + "&autoload=false";
@@ -147,14 +155,18 @@ function renderKakao(maps) {
   kakaoMap = new maps.Map(target, { center: new maps.LatLng(35.575, 129.34), level: 8 });
   allBounds = new maps.LatLngBounds();
   for (const road of roads) {
-    const path = road.path.map(([lat, lng]) => new maps.LatLng(lat, lng));
-    path.forEach((point) => allBounds.extend(point));
-    const line = new maps.Polyline({ map: kakaoMap, path, strokeColor: road.color, strokeWeight: 5 });
-    lines.set(road.id, line);
-    maps.event.addListener(line, "click", () => selectRoad(road, true));
-    const pin = roadButton(road, "pin", road.name);
+    const paths = road.paths.map((path) => path.map(([lat, lng]) => new maps.LatLng(lat, lng)));
+    for (const path of paths) path.forEach((point) => allBounds.extend(point));
+    if (paths.length) {
+      const line = new maps.Polyline({ map: kakaoMap, path: paths, strokeColor: road.color, strokeWeight: 5 });
+      lines.set(road.id, line);
+      maps.event.addListener(line, "click", () => selectRoad(road, true));
+    }
+    const position = new maps.LatLng(...road.marker);
+    allBounds.extend(position);
+    const pin = roadButton(road, "pin", road.markerLabel ?? road.name);
     new maps.CustomOverlay({
-      map: kakaoMap, position: new maps.LatLng(...centerPoint(road)), content: pin,
+      map: kakaoMap, position, content: pin,
       xAnchor: .5, yAnchor: .5, clickable: true, zIndex: 3
     });
   }
@@ -162,10 +174,10 @@ function renderKakao(maps) {
   byId("schematic").hidden = true;
   byId("reset").hidden = false;
   byId("map-mode").textContent = "Kakao Maps";
-  byId("map-note").textContent = mapNote;
+  showMapNote();
   for (const { road, button } of selections) button.setAttribute("aria-pressed", String(road === current));
   const selectedLine = lines.get(current.id);
-  selectedLine.setOptions({ strokeWeight: 8, strokeOpacity: .96 });
+  selectedLine?.setOptions({ strokeWeight: 8, strokeOpacity: .96 });
 }
 
 function updateDraft(value) {
@@ -215,5 +227,6 @@ byId("ask-form").addEventListener("submit", async (event) => {
 
 renderRoadTabs();
 renderSchematic();
+showMapNote();
 selectRoad(current, false);
 initKakao();
