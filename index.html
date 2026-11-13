@@ -279,22 +279,6 @@
             <!-- Tab Content 2: AI Chatbot (Gemini Search 연동) -->
 
             <div id="tab-ai" class="flex-1 flex flex-col hidden h-full bg-slate-50">
-
-                <!-- Gemini API setup: kept in browser memory only -->
-                <div class="p-3 bg-emerald-50 border-b border-emerald-100 space-y-2">
-                    <div class="flex justify-between items-center gap-2">
-                        <span class="text-xs font-bold text-emerald-950"><i class="fa-solid fa-key mr-1"></i> Gemini API 연결</span>
-                        <span id="gemini-status" class="text-[11px] text-amber-800 font-semibold">키 입력 필요</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <input id="gemini-key" type="password" autocomplete="off" spellcheck="false" placeholder="Google AI Studio에서 발급받은 API 키" class="min-w-0 flex-1 border border-emerald-200 bg-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <button type="button" onclick="saveGeminiKey()" class="shrink-0 bg-emerald-800 hover:bg-emerald-900 text-white px-3 rounded-lg text-xs font-bold">연결</button>
-                    </div>
-                    <div class="flex items-center justify-between gap-2">
-                      <span class="text-[10px] text-slate-600">키는 파일에 저장되지 않습니다. 브라우저를 새로고침하면 다시 입력해야 합니다.</span>
-                      <button type="button" onclick="clearGeminiKey()" class="shrink-0 text-[10px] text-slate-500 underline">키 해제</button>
-                    </div>
-                </div>
                 <!-- Chat Log -->
 
                 <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs custom-scrollbar">
@@ -901,31 +885,13 @@
 
         // Gemini AI API Grounding 서치 연동
 
-        // 보안 주의: GitHub Pages와 같은 정적 사이트에서 브라우저가 직접 호출하는
-        // API 키는 사용자 개발자도구에서 노출될 수 있습니다. 공개 서비스에는 서버 프록시를 쓰세요.
-        let geminiApiKey = "";
+        // 주의: 공개 GitHub Pages 파일의 API 키는 누구나 확인 가능합니다.
+        // 운영용으로 공개할 경우 서버 측 API 프록시로 옮겨야 합니다.
+        const geminiApiKey = "AQ.Ab8RN6LD86cxQ2mST3yAM0aEyUpustehO2XS9pwIXrDcKC1i-A";
         let geminiBusy = false;
-        function saveGeminiKey() {
-            const input = document.getElementById('gemini-key');
-            const key = input.value.trim();
-            if (!key) {
-                setGeminiStatus('API 키를 먼저 입력해 주세요.', true);
-                input.focus();
-                return;
-            }
-            geminiApiKey = key;
-            input.value = '';
-            setGeminiStatus('키 입력 완료 · 질문해 보세요', false);
-        }
-        function clearGeminiKey() {
-            geminiApiKey = '';
-            document.getElementById('gemini-key').value = '';
-            setGeminiStatus('키 입력 필요', true);
-        }
         function setGeminiStatus(message, error = false) {
-            const label = document.getElementById('gemini-status');
-            label.textContent = message;
-            label.className = 'text-[11px] font-semibold ' + (error ? 'text-rose-700' : 'text-emerald-800');
+            // 사용자에게 키 설정 UI를 표시하지 않습니다.
+            if (error) console.error('Gemini:', message);
         }
         function geminiErrorText(code, message) {
             const explanations = {
@@ -940,9 +906,6 @@
             return `Gemini 오류 ${code}: ${explanations[code] || '요청을 처리하지 못했습니다.'}\n상세: ${message}`;
         }
         async function fetchGeminiWithSearch(userQuery) {
-            if (!geminiApiKey) {
-                return { text: '먼저 AI 탭 위쪽에서 Gemini API 키를 입력하고 [연결] 버튼을 눌러 주세요.', sources: [], error: true };
-            }
             const systemPrompt = '당신은 울산 도로명(아산로, 이예로, 박상진로, 외솔길)과 관련 인물(정주영, 이예, 박상진, 최현배)을 설명하는 한국어 역사 도슨트입니다. 근거 없는 내용을 만들지 마세요. 구글 검색 결과를 활용하되 역사적으로 불확실하면 불확실하다고 밝히고, 쉽고 정중한 존댓말로 답변해 주세요.';
             const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
             const payload = {
