@@ -911,7 +911,7 @@
             const payload = {
                 contents: [{ role: 'user', parts: [{ text: userQuery }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] },
-                tools: [{ google_search: {} }]
+                tools: []
             };
             try {
                 const response = await fetch(apiUrl, {
