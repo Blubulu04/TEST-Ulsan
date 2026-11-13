@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>울산 길 따라 만나는 역사 - 스마트 지도 도슨트</title>
+
+    <!-- Tailwind CSS -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Kakao Maps API -->
+
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=d1d4058683fe82b8602c2d841cfaa769"></script>
+
+    <!-- FontAwesome Icons -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        body { font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+
+        #map { height: calc(100vh - 72px); z-index: 1; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+    </style>
+
+</head>
+
+<body class="bg-slate-100 text-slate-800 flex flex-col h-screen overflow-hidden">
+
+
+
+    <!-- Header Navigation -->
+
+    <header class="h-18 bg-emerald-900 text-white shadow-lg flex items-center justify-between px-5 z-20 relative">
+
+        <div class="flex items-center space-x-3 py-3">
+
+            <div class="w-10 h-10 rounded-xl bg-emerald-700/80 border border-emerald-500/30 flex items-center justify-center text-emerald-300 text-xl shadow-inner">
+
+                <i class="fa-solid fa-map-location-dot"></i>
+
+            </div>
+
+            <div>
+
+                <h1 class="text-lg font-bold leading-tight tracking-tight">울산 도로명 역사 스마트 지도</h1>
+
+                <p class="text-xs text-emerald-200/90 font-medium">아산로 · 이예로 · 박상진로 · 외솔길 디지털 도슨트</p>
+
+            </div>
+
+        </div>
+
+        <div class="flex items-center space-x-2">
+
+            <button onclick="stopSpeech()" id="global-speech-btn" class="hidden bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 animate-pulse shadow">
+
+                <i class="fa-solid fa-circle-stop"></i> 음성 중지
+
+            </button>
+
+            <button onclick="openQuizModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm border border-emerald-600">
+
+                <i class="fa-solid fa-graduation-cap text-emerald-300"></i> 역사 퀴즈
+
+            </button>
+
+            <button onclick="toggleSidebar()" class="md:hidden bg-emerald-800 p-2 rounded-lg text-white">
+
+                <i class="fa-solid fa-bars text-lg"></i>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- Main Content Area -->
+
+    <div class="flex-1 flex flex-col md:flex-row relative overflow-hidden">
+
+
+
+        <!-- Sidebar / Info Panel -->
+
+        <aside id="sidebar" class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-20 transition-all duration-300 absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 h-full shadow-2xl md:shadow-none">
+
+
+
+            <!-- Tab Navigation -->
+
+            <div class="flex border-b border-slate-200 bg-slate-50 p-1.5 gap-1">
+
+                <button id="tab-roads-btn" onclick="switchTab('roads')" class="flex-1 py-2.5 text-xs font-bold rounded-lg text-emerald-800 bg-white shadow-sm border border-slate-200/60 transition">
+
+                    <i class="fa-solid fa-route mr-1 text-emerald-600"></i> 4대 도로 코스
+
+                </button>
+
+                <button id="tab-ai-btn" onclick="switchTab('ai')" class="flex-1 py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-emerald-700 transition">
+
+                    <i class="fa-solid fa-robot mr-1 text-slate-400"></i> Gemini AI 도슨트
+
+                </button>
+
+            </div>
+
+
+
+            <!-- Tab Content 1: Roads List -->
+
+            <div id="tab-roads" class="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar bg-slate-50/50">
+
+                <div class="text-xs text-slate-500 mb-1 flex justify-between items-center px-1">
+
+                    <span>도로 카드를 클릭하면 해당 위치로 이동합니다.</span>
+
+                    <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">총 4개 코스</span>
+
+                </div>
+
+
+
+                <!-- 아산로 Card -->
+
+                <div onclick="focusRoad('asan')" class="p-4 border border-blue-200/80 rounded-2xl hover:border-blue-500 hover:shadow-md transition cursor-pointer bg-white group relative overflow-hidden">
+
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div>
+
+                    <div class="flex justify-between items-start mb-1.5 pl-1">
+
+                        <span class="bg-blue-600 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">아산로 (Blue)</span>
+
+                        <span class="text-[11px] font-medium text-slate-400">동구 ~ 북구</span>
+
+                    </div>
+
+                    <h3 class="font-bold text-slate-800 text-base group-hover:text-blue-600 transition pl-1">아산(峨山) 정주영 회장</h3>
+
+                    <p class="text-xs text-slate-600 mt-1 pl-1 leading-relaxed line-clamp-2">현대그룹 창업자 정주영 회장의 호에서 유래하였습니다. 울산 자동차 및 조선 산업의 기틀을 다진 정주영 회장의 산업 개척 정신이 담긴 도로입니다.</p>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-blue-600 font-semibold pl-1">
+
+                        <span><i class="fa-solid fa-location-dot mr-1"></i> 위치 보기</span>
+
+                        <button onclick="event.stopPropagation(); speakRoad('asan');" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 border border-blue-200/60">
+
+                            <i class="fa-solid fa-volume-high"></i> 음성 해설
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 이예로 Card -->
+
+                <div onclick="focusRoad('iye')" class="p-4 border border-amber-200/80 rounded-2xl hover:border-amber-500 hover:shadow-md transition cursor-pointer bg-white group relative overflow-hidden">
+
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>
+
+                    <div class="flex justify-between items-start mb-1.5 pl-1">
+
+                        <span class="bg-amber-500 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">이예로 (Orange)</span>
+
+                        <span class="text-[11px] font-medium text-slate-400">남구 ~ 북구</span>
+
+                    </div>
+
+                    <h3 class="font-bold text-slate-800 text-base group-hover:text-amber-600 transition pl-1">충숙공 이예 (李藝) 선생</h3>
+
+                    <p class="text-xs text-slate-600 mt-1 pl-1 leading-relaxed line-clamp-2">조선 최초의 전문 외교관 충숙공 이예 선생을 기리는 도로입니다. 40여 회 대일 외교를 왕래하며 조선인 피로인 667명을 구출하였습니다.</p>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-amber-600 font-semibold pl-1">
+
+                        <span><i class="fa-solid fa-location-dot mr-1"></i> 위치 보기</span>
+
+                        <button onclick="event.stopPropagation(); speakRoad('iye');" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 border border-amber-200/60">
+
+                            <i class="fa-solid fa-volume-high"></i> 음성 해설
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 박상진로 Card -->
+
+                <div onclick="focusRoad('parksangjin')" class="p-4 border border-rose-200/80 rounded-2xl hover:border-rose-500 hover:shadow-md transition cursor-pointer bg-white group relative overflow-hidden">
+
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-rose-500"></div>
+
+                    <div class="flex justify-between items-start mb-1.5 pl-1">
+
+                        <span class="bg-rose-500 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">박상진로 (Red)</span>
+
+                        <span class="text-[11px] font-medium text-slate-400">북구 송정동</span>
+
+                    </div>
+
+                    <h3 class="font-bold text-slate-800 text-base group-hover:text-rose-600 transition pl-1">고헌 박상진 (朴尙鎭) 의사</h3>
+
+                    <p class="text-xs text-slate-600 mt-1 pl-1 leading-relaxed line-clamp-2">1915년 비밀 무장 독립운동단체 '대한광복회' 총사령관 박상진 의사의 숭고한 독립 정신과 민족 기개가 깃든 송정지구 도로입니다.</p>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-rose-600 font-semibold pl-1">
+
+                        <span><i class="fa-solid fa-location-dot mr-1"></i> 위치 보기</span>
+
+                        <button onclick="event.stopPropagation(); speakRoad('parksangjin');" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 border border-rose-200/60">
+
+                            <i class="fa-solid fa-volume-high"></i> 음성 해설
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 외솔길 Card -->
+
+                <div onclick="focusRoad('oesol')" class="p-4 border border-purple-200/80 rounded-2xl hover:border-purple-500 hover:shadow-md transition cursor-pointer bg-white group relative overflow-hidden">
+
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-purple-600"></div>
+
+                    <div class="flex justify-between items-start mb-1.5 pl-1">
+
+                        <span class="bg-purple-600 text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm">외솔길 (Purple)</span>
+
+                        <span class="text-[11px] font-medium text-slate-400">중구 동동</span>
+
+                    </div>
+
+                    <h3 class="font-bold text-slate-800 text-base group-hover:text-purple-600 transition pl-1">외솔 최현배 (崔鉉培) 선생</h3>
+
+                    <p class="text-xs text-slate-600 mt-1 pl-1 leading-relaxed line-clamp-2">일제의 민족 문화 말살정책에 맞서 한글 연구와 수호에 일생을 바치신 외솔 최현배 선생의 생가터 및 기념관 인근 도로입니다.</p>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-purple-600 font-semibold pl-1">
+
+                        <span><i class="fa-solid fa-location-dot mr-1"></i> 위치 보기</span>
+
+                        <button onclick="event.stopPropagation(); speakRoad('oesol');" class="bg-purple-50 hover:bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg transition flex items-center gap-1 border border-purple-200/60">
+
+                            <i class="fa-solid fa-volume-high"></i> 음성 해설
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+
+            </div>
+
+
+
+            <!-- Tab Content 2: AI Chatbot (Gemini Search 연동) -->
+
+            <div id="tab-ai" class="flex-1 flex flex-col hidden h-full bg-slate-50">
+
+                <!-- Gemini API setup: kept in browser memory only -->
+                <div class="p-3 bg-emerald-50 border-b border-emerald-100 space-y-2">
+                    <div class="flex justify-between items-center gap-2">
+                        <span class="text-xs font-bold text-emerald-950"><i class="fa-solid fa-key mr-1"></i> Gemini API 연결</span>
+                        <span id="gemini-status" class="text-[11px] text-amber-800 font-semibold">키 입력 필요</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="gemini-key" type="password" autocomplete="off" spellcheck="false" placeholder="Google AI Studio에서 발급받은 API 키" class="min-w-0 flex-1 border border-emerald-200 bg-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="saveGeminiKey()" class="shrink-0 bg-emerald-800 hover:bg-emerald-900 text-white px-3 rounded-lg text-xs font-bold">연결</button>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-[10px] text-slate-600">키는 파일에 저장되지 않습니다. 브라우저를 새로고침하면 다시 입력해야 합니다.</span>
+                      <button type="button" onclick="clearGeminiKey()" class="shrink-0 text-[10px] text-slate-500 underline">키 해제</button>
+                    </div>
+                </div>
+                <!-- Chat Log -->
+
+                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3.5 text-xs custom-scrollbar">
+
+                    <div class="flex gap-2.5">
+
+                        <div class="w-8 h-8 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">AI</div>
+
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 text-slate-700 max-w-[85%] shadow-sm leading-relaxed">
+
+                            안녕하십니까! 울산 도로명 역사 AI 디지털 도슨트입니다. 😊<br><br>
+
+                            필요할 때 구글 검색을 활용하여 <b>아산로, 이예로, 박상진로, 외솔길</b>의 역사적 인물과 사건에 대해 정확하고 깊이 있는 정보를 설명해 드립니다. 궁금하신 점을 자유롭게 질문해 주십시오!
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Chat Input -->
+
+                <div class="p-3 bg-white border-t border-slate-200 flex gap-2">
+
+                    <input type="text" id="chat-input" placeholder="예: 이예 선생의 계해약조 업적에 대해 설명해 주세요" onkeypress="handleKeyPress(event)" class="flex-1 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600">
+
+                    <button id="chat-send-btn" onclick="sendMessage()" class="bg-emerald-800 hover:bg-emerald-900 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 shadow-sm">
+
+                        <i class="fa-solid fa-paper-plane"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+        </aside>
+
+
+
+        <!-- Map Container (Kakao Map) -->
+
+        <main class="flex-1 relative">
+
+            <div id="map"></div>
+
+
+
+            <!-- Floating Quick Nav Bar on Map -->
+
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] bg-white/90 backdrop-blur-md px-3 py-2 rounded-2xl shadow-xl border border-slate-200/80 flex items-center gap-2 max-w-[95vw] overflow-x-auto">
+
+                <span class="text-[11px] font-bold text-slate-500 ml-1 shrink-0"><i class="fa-solid fa-compass text-emerald-600 mr-1"></i>도로 바로가기:</span>
+
+                <button onclick="focusRoad('asan')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200 shrink-0">아산로</button>
+
+                <button onclick="focusRoad('iye')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200 shrink-0">이예로</button>
+
+                <button onclick="focusRoad('parksangjin')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 shrink-0">박상진로</button>
+
+                <button onclick="focusRoad('oesol')" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold border border-purple-200 shrink-0">외솔길</button>
+
+            </div>
+
+
+
+            <!-- Selected Info Modal / Popup Banner on Map -->
+
+            <div id="info-card" class="hidden absolute top-4 right-4 left-4 md:left-auto md:w-96 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-slate-200 z-[1000] transition-all">
+
+                <div class="flex justify-between items-center mb-2">
+
+                    <span id="card-tag" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">도로 안내</span>
+
+                    <button onclick="closeInfoCard()" class="text-slate-400 hover:text-slate-600 text-lg">
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                    </button>
+
+                </div>
+
+                <h2 id="card-title" class="text-lg font-bold text-slate-800">도로명 제목</h2>
+
+                <h4 id="card-sub" class="text-xs text-slate-500 mb-3">연관 인물 / 위치</h4>
+
+                <div id="card-desc" class="text-xs text-slate-600 leading-relaxed mb-4 max-h-52 overflow-y-auto custom-scrollbar">
+
+                    설명 내용이 여기에 들어갑니다.
+
+                </div>
+
+                <div class="flex gap-2">
+
+                    <button id="card-speak-btn" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+
+                        <i class="fa-solid fa-volume-high text-amber-400"></i> 음성 듣기
+
+                    </button>
+
+                    <button id="card-ai-ask-btn" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2 px-3 rounded-xl transition flex items-center justify-center gap-1 shadow-sm">
+
+                        <i class="fa-solid fa-robot"></i> AI 구글 서치 심층 질문
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+
+    <!-- Quiz Modal -->
+
+    <div id="quiz-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl relative border border-slate-100">
+
+            <button onclick="closeQuizModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+            <div class="flex items-center gap-2 mb-4">
+
+                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold">
+
+                    <i class="fa-solid fa-graduation-cap"></i>
+
+                </div>
+
+                <div>
+
+                    <h3 class="text-base font-bold text-slate-800">울산 도로명 역사 퀴즈 탐방</h3>
+
+                    <p class="text-xs text-slate-500">인물과 사건에 관한 역사를 확인해보세요!</p>
+
+                </div>
+
+            </div>
+
+            <div id="quiz-container">
+
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 mb-4">
+
+                    <p id="quiz-question" class="text-xs font-bold text-slate-800 leading-relaxed">질문 내용이 표시됩니다.</p>
+
+                </div>
+
+                <div id="quiz-options" class="space-y-2 mb-4"></div>
+
+                <div id="quiz-result" class="text-xs font-bold text-center py-2.5 rounded-xl hidden leading-relaxed"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Kakao Map & Gemini API Script Logic -->
+
+    <script>
+
+        // 울산 4대 도로 데이터 (카카오 지도 장소 검색 기반 정확한 주소 및 좌표 핀포인트 적용)
+
+        const roadsData = {
+
+            asan: {
+
+                title: "아산로 (현대예술공원)",
+
+                sub: "울산광역시 동구 서부동 1028-1",
+
+                tag: "아산로 (파란색)",
+
+                tagBg: "bg-blue-600 text-white",
+
+                color: "#2563eb",
+
+                center: { lat: 35.5392, lng: 129.4305 }, // 현대예술공원 핀포인트 (동구 서부동 1028-1)
+
+                radius: 2500, // 아산로 실제 구간(약 5km) 크기에 맞춰 2500m로 조정
+
+                level: 6,
+
+                desc: `<b>[역사적 거점 & 도로 유래]</b><br>
+
+                핀포인트 위치는 **현대예술공원** (울산 동구 서부동 1028-1)입니다. '아산로'는 현대그룹 창업주인 **아산(峨山) 정주영 회장**의 호에서 명명되었습니다. 현대중공업, 현대자동차 및 남구/북구를 연결하는 해안 핵심 간선도로입니다.<br><br>
+
+                <b>[역사적 사건 & 의미]</b><br>
+
+                1990년대 중반 울산 미포국가산업단지의 극심한 물류 수송난을 해결하기 위해 현대그룹이 전액 투자하여 자가 건설한 뒤 울산시에 기부채납한 도로입니다. 대한민국 자동차 및 조선 산업 부흥을 이끈 울산 현대 산업사의 정수입니다.`,
+
+                speechText: "아산로의 주요 핀포인트는 울산 동구 서부동에 위치한 현대예술공원입니다. 현대그룹 창업주 아산 정주영 회장의 호에서 명명된 도로로, 울산 미포국가산업단지의 수송난을 완화하기 위해 현대가 직접 건설하여 울산시에 기부채납한 역사적 의미가 있습니다."
+
+            },
+
+            iye: {
+
+                title: "이예로 (이예공원)",
+
+                sub: "울산광역시 중구 태화동 834-1",
+
+                tag: "이예로 (주황색)",
+
+                tagBg: "bg-amber-500 text-white",
+
+                color: "#f59e0b",
+
+                center: { lat: 35.5528, lng: 129.2885 }, // 이예공원 핀포인트 (중구 태화동 834-1)
+
+                radius: 4500, // 이예로 옥동-농소간 도로 구간 규모에 맞춰 4500m로 조정
+
+                level: 7,
+
+                desc: `<b>[역사적 거점 & 도로 유래]</b><br>
+
+                핀포인트 위치는 **이예공원** (울산 중구 태화동 834-1)입니다. 울산시를 관통하는 주요 도로로, 조선 세종대왕 시절 울산 출신의 위대한 독보적 전문 외교관 **충숙공 이예 선생**의 업적을 기리기 위해 명명되었습니다.<br><br>
+
+                <b>[역사적 사건 & 의미]</b><br>
+
+                이예 선생은 뛰어난 외교적 지혜로 40여 회나 대일 외교를 왕래하며 왜구에게 납치되었던 조선인 피로인 667명을 구출하였습니다. 또한 1443년 한일 교역의 기준이 된 '계해약조' 체결을 주도한 구국의 외교 영웅입니다.`,
+
+                speechText: "이예로의 주요 핀포인트는 울산 중구 태화동에 위치한 이예공원입니다. 이예로는 조선 초기 울산 출신의 전문 외교관 충숙공 이예 선생의 이름을 딴 도로로, 40여 차례 일본을 왕래하며 조선인 피로인 667명을 구출하고 계해약조 체결을 주도한 업적을 기리고 있습니다."
+
+            },
+
+            parksangjin: {
+
+                title: "박상진로 (박상진의사 생가)",
+
+                sub: "울산광역시 북구 박상진5로 10 (송정동)",
+
+                tag: "박상진로 (빨간색)",
+
+                tagBg: "bg-rose-500 text-white",
+
+                color: "#ef4444",
+
+                center: { lat: 35.5962, lng: 129.3626 }, // 박상진의사 생가 핀포인트 (북구 박상진5로 10)
+
+                radius: 2500, // 박상진로 송정지구 구간 규모에 맞춰 700m로 조정
+
+                level: 4,
+
+                desc: `<b>[역사적 거점 & 도로 유래]</b><br>
+
+                핀포인트 위치는 **박상진의사 생가** (울산 북구 박상진5로 10)입니다. 1910년대 일제강점기 국내 무장 독립투쟁을 총지휘한 **고헌 박상진 의사**의 숭고한 정신을 계승하고 있습니다.<br><br>
+
+                <b>[역사적 사건 & 의미]</b><br>
+
+                판사 임용을 거부하고 전 재산을 독립운동 자금으로 바친 박상진 의사는 1915년 비밀 결사 조직인 **'대한광복회'**를 결성하고 총사령관으로 취임하여 군자금 모집, 친일파 처단 등 강렬한 무장 항일 투쟁을 주도하였습니다.`,
+
+                speechText: "박상진로의 주요 핀포인트는 울산 북구 박상진5로에 위치한 박상진 의사 생가입니다. 독립운동가 고헌 박상진 의사의 숭고한 뜻을 기리기 위해 지정된 도로로, 박상진 의사는 1915년 비밀 무장 독립운동단체인 대한광복회 총사령으로 투쟁한 순국선열입니다."
+
+            },
+
+            oesol: {
+
+                title: "외솔길 (외솔최현배선생기념관)",
+
+                sub: "울산광역시 중구 병영12길 15",
+
+                tag: "외솔길 (보라색)",
+
+                tagBg: "bg-purple-600 text-white",
+
+                color: "#8b5cf6",
+
+                center: { lat: 35.5682, lng: 129.3422 }, // 외솔기념관 핀포인트 (중구 병영12길 15)
+
+                radius: 1000, // 외솔길 구역 실제 길이에 맞춰 350m로 조정
+
+                level: 3,
+
+                desc: `<b>[역사적 거점 & 도로 유래]</b><br>
+
+                핀포인트 위치는 **외솔최현배선생기념관** (울산 중구 병영12길 15)입니다. 평생을 한글 연구와 수호에 이바지한 **외솔 최현배 선생**의 민족적 유산을 기리는 공간입니다.<br><br>
+
+                <b>[역사적 사건 & 의미]</b><br>
+
+                일제의 민족문화 말살 정책에 맞서 조선어학회 사건(1942년)으로 3년 여의 옥고를 치르면서도 우리말 교재 편찬, 한글 가로쓰기 제안 등 한글을 통한 민족정신 수호에 헌신하셨습니다.`,
+
+                speechText: "외솔길의 주요 핀포인트는 울산 중구 병영12길에 위치한 외솔최현배선생기념관입니다. 한글학자 외솔 최현배 선생의 생가터에 위치한 이 길은 일제강점기 조선어학회 사건으로 옥고를 치르면서도 우리말 연구와 한글 보급을 이끈 외솔 선생의 정신을 기리고 있습니다."
+
+            }
+
+        };
+
+
+
+        let map = null;
+
+        let mapCircles = {};
+
+        let mapMarkers = {};
+
+        let synth = window.speechSynthesis;
+
+        let currentUtterance = null;
+
+
+
+        window.onload = function() {
+
+            initKakaoMap();
+
+            loadQuiz();
+
+        };
+
+
+
+        // 카카오 지도 초기화
+
+        function initKakaoMap() {
+
+            const container = document.getElementById('map');
+
+            if (typeof kakao === 'undefined' || !kakao.maps) {
+
+                container.innerHTML = `
+
+                    <div class="flex flex-col items-center justify-center h-full bg-slate-100 text-slate-600 p-6 text-center">
+
+                        <i class="fa-solid fa-map-location-dot text-5xl text-emerald-600 mb-4"></i>
+
+                        <h3 class="text-lg font-bold mb-2">카카오 지도 API 키 설정 안내</h3>
+
+                        <p class="text-xs max-w-md text-slate-500 mb-4">HTML 코드 내 Kakao API Script의 <code>appkey</code>를 확인하세요.</p>
+
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+
+
+            const options = {
+
+                center: new kakao.maps.LatLng(35.56, 129.33),
+
+                level: 7
+
+            };
+
+            map = new kakao.maps.Map(container, options);
+
+
+
+            // 4개 도로 영역(Circle) 및 마커 생성
+
+            Object.keys(roadsData).forEach(key => {
+
+                const road = roadsData[key];
+
+                const centerPos = new kakao.maps.LatLng(road.center.lat, road.center.lng);
+
+
+
+                // 반투명 구역(Circle) 생성
+
+                const circle = new kakao.maps.Circle({
+
+                    center: centerPos,
+
+                    radius: road.radius,
+
+                    strokeWeight: 2,
+
+                    strokeColor: road.color,
+
+                    strokeOpacity: 0.8,
+
+                    strokeStyle: 'dashed',
+
+                    fillColor: road.color,
+
+                    fillOpacity: 0.25
+
+                });
+
+                circle.setMap(map);
+
+                mapCircles[key] = circle;
+
+
+
+                // 마커 생성
+
+                const marker = new kakao.maps.Marker({
+
+                    position: centerPos,
+
+                    clickable: true
+
+                });
+
+                marker.setMap(map);
+
+                mapMarkers[key] = marker;
+
+
+
+                kakao.maps.event.addListener(marker, 'click', function() {
+
+                    focusRoad(key);
+
+                });
+
+            });
+
+        }
+
+
+
+        // 특정 도로로 지도 이동 및 카드 표시
+
+        function focusRoad(key) {
+
+            const road = roadsData[key];
+
+            if (!road) return;
+
+
+
+            if (map && kakao.maps) {
+
+                const moveLatLon = new kakao.maps.LatLng(road.center.lat, road.center.lng);
+
+                map.setLevel(road.level);
+
+                map.panTo(moveLatLon);
+
+            }
+
+
+
+            // Info Card 내용 업데이트
+
+            document.getElementById('card-tag').className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${road.tagBg}`;
+
+            document.getElementById('card-tag').innerText = road.tag;
+
+            document.getElementById('card-title').innerText = road.title;
+
+            document.getElementById('card-sub').innerText = road.sub;
+
+            document.getElementById('card-desc').innerHTML = road.desc;
+
+
+
+            document.getElementById('card-speak-btn').onclick = () => speakRoad(key);
+
+            document.getElementById('card-ai-ask-btn').onclick = () => {
+
+                switchTab('ai');
+
+                askAiDirectly(`${road.title} 및 인물에 대해 구글 검색해서 자세히 설명해주세요.`);
+
+            };
+
+
+
+            document.getElementById('info-card').classList.remove('hidden');
+
+        }
+
+
+
+        function closeInfoCard() {
+
+            document.getElementById('info-card').classList.add('hidden');
+
+        }
+
+
+
+        function switchTab(tab) {
+
+            const roadsTab = document.getElementById('tab-roads');
+
+            const aiTab = document.getElementById('tab-ai');
+
+            const roadsBtn = document.getElementById('tab-roads-btn');
+
+            const aiBtn = document.getElementById('tab-ai-btn');
+
+
+
+            if (tab === 'roads') {
+
+                roadsTab.classList.remove('hidden');
+
+                aiTab.classList.add('hidden');
+
+                roadsBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg text-emerald-800 bg-white shadow-sm border border-slate-200/60 transition";
+
+                aiBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-emerald-700 transition";
+
+            } else {
+
+                roadsTab.classList.add('hidden');
+
+                aiTab.classList.remove('hidden');
+
+                aiBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg text-emerald-800 bg-white shadow-sm border border-slate-200/60 transition";
+
+                roadsBtn.className = "flex-1 py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-emerald-700 transition";
+
+            }
+
+        }
+
+
+
+        function toggleSidebar() {
+
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+
+        }
+
+
+
+        // 음성 안내 TTS (Text-to-Speech)
+
+        function speakRoad(key) {
+
+            const road = roadsData[key];
+
+            if (!road || !synth) return;
+
+
+
+            stopSpeech();
+
+
+
+            const textToSpeak = road.speechText || road.title;
+
+            currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
+
+            currentUtterance.lang = 'ko-KR';
+
+            currentUtterance.rate = 0.95;
+
+
+
+            currentUtterance.onstart = function() {
+
+                document.getElementById('global-speech-btn').classList.remove('hidden');
+
+            };
+
+
+
+            currentUtterance.onend = function() {
+
+                document.getElementById('global-speech-btn').classList.add('hidden');
+
+            };
+
+
+
+            currentUtterance.onerror = function() {
+
+                document.getElementById('global-speech-btn').classList.add('hidden');
+
+            };
+
+
+
+            synth.speak(currentUtterance);
+
+        }
+
+
+
+        function stopSpeech() {
+
+            if (synth && synth.speaking) {
+
+                synth.cancel();
+
+            }
+
+            document.getElementById('global-speech-btn').classList.add('hidden');
+
+        }
+
+
+
+        // Gemini AI API Grounding 서치 연동
+
+        // 보안 주의: GitHub Pages와 같은 정적 사이트에서 브라우저가 직접 호출하는
+        // API 키는 사용자 개발자도구에서 노출될 수 있습니다. 공개 서비스에는 서버 프록시를 쓰세요.
+        let geminiApiKey = "";
+        let geminiBusy = false;
+        function saveGeminiKey() {
+            const input = document.getElementById('gemini-key');
+            const key = input.value.trim();
+            if (!key) {
+                setGeminiStatus('API 키를 먼저 입력해 주세요.', true);
+                input.focus();
+                return;
+            }
+            geminiApiKey = key;
+            input.value = '';
+            setGeminiStatus('키 입력 완료 · 질문해 보세요', false);
+        }
+        function clearGeminiKey() {
+            geminiApiKey = '';
+            document.getElementById('gemini-key').value = '';
+            setGeminiStatus('키 입력 필요', true);
+        }
+        function setGeminiStatus(message, error = false) {
+            const label = document.getElementById('gemini-status');
+            label.textContent = message;
+            label.className = 'text-[11px] font-semibold ' + (error ? 'text-rose-700' : 'text-emerald-800');
+        }
+        function geminiErrorText(code, message) {
+            const explanations = {
+                400: '요청 형식이나 API 키 제한 설정을 확인해 주세요.',
+                401: 'API 인증 실패입니다. API 키를 확인해 주세요.',
+                403: 'API 이용 권한, 키 제한 또는 결제 설정을 확인해 주세요.',
+                404: '선택한 Gemini 모델을 사용할 수 없습니다.',
+                429: '요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.',
+                500: 'Gemini 서버 내부 오류입니다.',
+                503: 'Gemini 서버가 일시적으로 혼잡합니다.'
+            };
+            return `Gemini 오류 ${code}: ${explanations[code] || '요청을 처리하지 못했습니다.'}\n상세: ${message}`;
+        }
+        async function fetchGeminiWithSearch(userQuery) {
+            if (!geminiApiKey) {
+                return { text: '먼저 AI 탭 위쪽에서 Gemini API 키를 입력하고 [연결] 버튼을 눌러 주세요.', sources: [], error: true };
+            }
+            const systemPrompt = '당신은 울산 도로명(아산로, 이예로, 박상진로, 외솔길)과 관련 인물(정주영, 이예, 박상진, 최현배)을 설명하는 한국어 역사 도슨트입니다. 근거 없는 내용을 만들지 마세요. 구글 검색 결과를 활용하되 역사적으로 불확실하면 불확실하다고 밝히고, 쉽고 정중한 존댓말로 답변해 주세요.';
+            const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+            const payload = {
+                contents: [{ role: 'user', parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                tools: [{ google_search: {} }]
+            };
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': geminiApiKey
+                    },
+                    body: JSON.stringify(payload)
+                });
+                let result;
+                try { result = await response.json(); }
+                catch { return { text: `서버 응답을 읽지 못했습니다 (HTTP ${response.status}).`, sources: [], error: true }; }
+                if (!response.ok) {
+                    console.error('Gemini API 응답 오류', response.status, result.error);
+                    return {
+                        text: geminiErrorText(response.status, result.error?.message || '추가 메시지 없음'),
+                        sources: [], error: true
+                    };
+                }
+                const candidate = result.candidates?.[0];
+                const answer = (candidate?.content?.parts || [])
+                    .filter(part => typeof part.text === 'string')
+                    .map(part => part.text).join('\n').trim();
+                const chunks = candidate?.groundingMetadata?.groundingChunks || [];
+                const sources = Array.from(new Map(chunks
+                    .filter(chunk => chunk.web?.uri && /^https?:\/\//.test(chunk.web.uri))
+                    .map(chunk => [chunk.web.uri, {
+                        uri: chunk.web.uri,
+                        title: chunk.web.title || '관련 검색 결과'
+                    }])).values());
+                if (!answer) {
+                    const reason = candidate?.finishReason || result.promptFeedback?.blockReason || '답변 없음';
+                    return { text: `답변을 생성하지 못했습니다. 응답 상태: ${reason}`, sources: [], error: true };
+                }
+                return { text: answer, sources, error: false };
+            } catch (error) {
+                console.error('Gemini 네트워크 오류', error);
+                return {
+                    text: `통신 오류: ${error.message}\n브라우저 네트워크, API 접근, CORS 설정을 확인해 주세요.`,
+                    sources: [], error: true
+                };
+            }
+        }
+
+        function escapeHtml(text) {
+            return String(text).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const query = input.value.trim();
+            if (!query || geminiBusy) return;
+            appendMessage('user', escapeHtml(query));
+            input.value = '';
+            geminiBusy = true;
+            const sendBtn = document.getElementById('chat-send-btn');
+            sendBtn.disabled = true;
+            sendBtn.classList.add('opacity-50');
+            const loadingId = appendLoading();
+            try {
+                const responseData = await fetchGeminiWithSearch(query);
+                let formattedReply = escapeHtml(responseData.text).replace(/\n/g, '<br>');
+                if (responseData.sources?.length) {
+                    formattedReply += '<br><br><div class="border-t border-slate-200 pt-2 mt-2 text-[11px] text-slate-500"><b>🔍 구글 검색 출처:</b><ul class="list-disc ml-4">';
+                    responseData.sources.slice(0, 3).forEach(src => {
+                        formattedReply += `<li><a href="${escapeHtml(src.uri)}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 hover:underline font-medium">${escapeHtml(src.title)}</a></li>`;
+                    });
+                    formattedReply += '</ul></div>';
+                }
+                appendMessage('ai', formattedReply);
+                setGeminiStatus(responseData.error ? '오류 발생 · 내용 확인' : '연결 성공', !!responseData.error);
+            } finally {
+                removeLoading(loadingId);
+                geminiBusy = false;
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('opacity-50');
+                input.focus();
+            }
+        }
+
+        function askAiDirectly(text) {
+
+            switchTab('ai');
+
+            const input = document.getElementById('chat-input');
+
+            input.value = text;
+
+            sendMessage();
+
+        }
+
+
+
+        function handleKeyPress(e) {
+
+            if (e.key === 'Enter') sendMessage();
+
+        }
+
+
+
+        function appendMessage(sender, text) {
+
+            const messagesDiv = document.getElementById('chat-messages');
+
+            const msgBg = sender === 'user' ? 'bg-emerald-800 text-white self-end ml-auto' : 'bg-white text-slate-700 border border-slate-200/80';
+
+            const flexAlign = sender === 'user' ? 'justify-end' : 'justify-start';
+
+
+
+            const html = `
+
+                <div class="flex gap-2.5 ${flexAlign}">
+
+                    ${sender === 'ai' ? `<div class="w-8 h-8 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">AI</div>` : ''}
+
+                    <div class="${msgBg} p-3.5 rounded-2xl max-w-[85%] shadow-sm leading-relaxed">
+
+                        ${text}
+
+                    </div>
+
+                </div>
+
+            `;
+
+            messagesDiv.insertAdjacentHTML('beforeend', html);
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        }
+
+
+
+        function appendLoading() {
+
+            const messagesDiv = document.getElementById('chat-messages');
+
+            const id = 'loading-' + Date.now();
+
+            const html = `
+
+                <div id="${id}" class="flex gap-2.5 justify-start">
+
+                    <div class="w-8 h-8 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">AI</div>
+
+                    <div class="bg-white text-slate-500 border border-slate-200/80 p-3.5 rounded-2xl max-w-[80%] shadow-sm leading-relaxed text-xs flex items-center gap-2">
+
+                        <i class="fa-solid fa-spinner animate-spin text-emerald-600"></i> Gemini가 답변을 작성하고 있습니다...
+
+                    </div>
+
+                </div>
+
+            `;
+
+            messagesDiv.insertAdjacentHTML('beforeend', html);
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            return id;
+
+        }
+
+
+
+        function removeLoading(id) {
+
+            const el = document.getElementById(id);
+
+            if (el) el.remove();
+
+        }
+
+
+
+        // Quiz Logic
+
+        const quizList = [
+
+            {
+
+                q: "조선 시대 전문 외교관으로, 대일 외교 중 왜구에게 잡혀간 667명의 조선인 피로인을 구출한 울산 출신 위인은?",
+
+                options: ["박상진 의사", "외솔 최현배 선생", "충숙공 이예 선생", "아산 정주영 회장"],
+
+                ans: 2,
+
+                exp: "충숙공 이예 선생은 40여 차례 일본을 왕래하며 피로인 구출과 계해약조 체결을 주도하셨습니다."
+
+            },
+
+            {
+
+                q: "1915년 비밀 무장 독립운동단체 '대한광복회'를 결성하고 총사령을 맡으신 울산 송정 출신 독립운동가는?",
+
+                options: ["고헌 박상진 의사", "외솔 최현배 선생", "아산 정주영 회장", "충숙공 이예 선생"],
+
+                ans: 0,
+
+                exp: "박상진 의사는 판사 임용을 거부하고 전 재산을 바쳐 대한광복회 총사령관으로 일제에 투쟁하셨습니다."
+
+            },
+
+            {
+
+                q: "울산 미포국가산업단지의 극심한 물류 수송난 해결을 위해 현대그룹이 자가 건설하여 울산시에 기부채납한 도로명은?",
+
+                options: ["이예로", "외솔길", "아산로", "박상진로"],
+
+                ans: 2,
+
+                exp: "아산로는 정주영 회장의 호 '아산'에서 유래되었으며 현대그룹이 직접 건설하여 울산시에 기부채납한 도로입니다."
+
+            },
+
+            {
+
+                q: "일제강점기 조선어학회 사건으로 옥고를 치르면서도 우리말 연구와 한글 보급에 평생을 바친 한글학자는?",
+
+                options: ["박상진 의사", "외솔 최현배 선생", "충숙공 이예 선생", "정주영 회장"],
+
+                ans: 1,
+
+                exp: "외솔 최현배 선생은 병영 출신의 대표적 한글학자로 한글 가로쓰기 및 한글 전용을 주도하셨습니다."
+
+            },
+
+            {
+
+                q: "이예 선생이 1443년 세종대왕의 뜻에 따라 조선과 일본 쓰시마 도주 간 체결을 주도한 조약의 이름은?",
+
+                options: ["계해약조", "임신약조", "정미약조", "강화도조약"],
+
+                ans: 0,
+
+                exp: "계해약조는 세패선과 세급미 수량을 규정하여 동아시아 해상 질서를 안정시킨 조약입니다."
+
+            },
+
+            {
+
+                q: "고헌 박상진 의사의 생가터 및 박상진 호수공원이 위치한 울산 광역시의 행정구역은 어디일까요?",
+
+                options: ["울산 남구", "울산 중구", "울산 북구", "울산 동구"],
+
+                ans: 2,
+
+                exp: "박상진 의사의 생가는 울산 북구 송정동에 보존되어 있으며 주변 도로가 '박상진로'로 지정되어 있습니다."
+
+            }
+
+        ];
+
+        let currentQuizIndex = 0;
+
+
+
+        function openQuizModal() {
+
+            document.getElementById('quiz-modal').classList.remove('hidden');
+
+            loadQuiz();
+
+        }
+
+
+
+        function closeQuizModal() {
+
+            document.getElementById('quiz-modal').classList.add('hidden');
+
+        }
+
+
+
+        function loadQuiz() {
+
+            const quiz = quizList[currentQuizIndex];
+
+            document.getElementById('quiz-question').innerText = `Q${currentQuizIndex + 1}. ${quiz.q}`;
+
+            const optionsDiv = document.getElementById('quiz-options');
+
+            optionsDiv.innerHTML = '';
+
+            document.getElementById('quiz-result').classList.add('hidden');
+
+
+
+            quiz.options.forEach((opt, idx) => {
+
+                const btn = document.createElement('button');
+
+                btn.className = "w-full text-left p-3 rounded-xl border border-slate-200 hover:bg-emerald-50 hover:border-emerald-500 text-xs font-semibold text-slate-700 transition";
+
+                btn.innerText = `${idx + 1}. ${opt}`;
+
+                btn.onclick = () => checkQuizAnswer(idx);
+
+                optionsDiv.appendChild(btn);
+
+            });
+
+        }
+
+
+
+        function checkQuizAnswer(selectedIdx) {
+
+            const quiz = quizList[currentQuizIndex];
+
+            const resultDiv = document.getElementById('quiz-result');
+
+            resultDiv.classList.remove('hidden');
+
+
+
+            if (selectedIdx === quiz.ans) {
+
+                resultDiv.className = "text-xs font-bold text-center py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200";
+
+                resultDiv.innerHTML = `🎉 정답입니다!<br><span class="font-normal text-[11px] text-emerald-800">${quiz.exp}</span>`;
+
+            } else {
+
+                resultDiv.className = "text-xs font-bold text-center py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200";
+
+                resultDiv.innerHTML = `❌ 아쉽습니다. 정답은 ${quiz.ans + 1}번입니다.<br><span class="font-normal text-[11px] text-rose-800">${quiz.exp}</span>`;
+
+            }
+
+
+
+            setTimeout(() => {
+
+                currentQuizIndex = (currentQuizIndex + 1) % quizList.length;
+
+                loadQuiz();
+
+            }, 2500);
+
+        }
+
+    </script>
+
+</body>
+
+</html>
